@@ -1,4 +1,4 @@
-jsoncppgenerator
+JSON C++ Code Generator
 ================
 
-JSON C++ Code Generator, tool of generating JSON Spirit C++ code from JSON data
+tool of generating JSON Spirit C++ code from JSON data
