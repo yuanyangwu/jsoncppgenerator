@@ -1,0 +1,39 @@
+
+# to be replaced with json file path
+JSON_FILE := ../../TO_REPLACE_JSON_FILE
+
+OUTPUT_APP := output/bin/test
+
+CLIENT_SRC_FILES := $(wildcard $(CURDIR)/src/*.cpp)
+CLIENT_OBJ_FILES := $(patsubst $(CURDIR)/src/%.cpp, $(CURDIR)/output/obj/%.o, $(CLIENT_SRC_FILES))
+
+JSONSPIRIT_DIR=/home/frankwu/devroot/github/json_spirit_root/json_spirit_v4.05_bin
+
+CFLAGS := \
+	-I$(CURDIR)/src \
+	-I$(JSONSPIRIT_DIR)/include \
+	-g -O2 \
+
+STRICT_CFLAGS := $(CFLAGS) -Wall
+
+LDFLAGS := -g -O2 -Wall \
+
+
+default: init $(OUTPUT_APP)
+
+init:
+	@mkdir -p output/bin
+	@mkdir -p output/obj
+
+clean:
+	rm -fr output
+
+run: $(OUTPUT_APP)
+	@$(OUTPUT_APP) ${JSON_FILE}
+
+$(OUTPUT_APP): $(CLIENT_OBJ_FILES)
+	g++ -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a
+
+$(CURDIR)/output/obj/%.o: $(CURDIR)/src/%.cpp
+	g++ $(STRICT_CFLAGS) -c $< -o $@
+

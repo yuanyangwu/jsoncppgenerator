@@ -1,0 +1,10 @@
+{
+  "stringValue": "str1",
+  "intValue": 1,
+  "realValue": 1.23,
+  "boolValue": false,
+  "objectValue": {
+    "stringValue": "str2",
+    "intValue": 2
+  }
+}
