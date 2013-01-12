@@ -1187,19 +1187,28 @@ int main(int argc, char ** argv)
 		f.write(self.content)
 		f.close()
 
+def parse_options():
+	import optparse
+
+	usage_msg = """usage: %prog [options]"""
+	parser = optparse.OptionParser(usage=usage_msg)
+	parser.add_option("--jsondatafile", dest="jsondatafile",
+		help="required, JSON data file path")
+	parser.add_option("--dstdir", dest="dstdir", default=".",
+		help="directory to save the generated code files, default is current directory")
+	parser.add_option("--gentest", action="store_true", dest="gentest", default=False,
+		help="""generate test code "main.cpp", default is false""")
+	options, reminder = parser.parse_args()
+	if options.jsondatafile == None:
+		parser.print_help()
+		exit(1)
+
+	return options
+
 if __name__ == "__main__":
-	import sys
-	if len(sys.argv) > 1:
-		filepath = sys.argv[1]
-	else:
-		filepath = "test/data/object_simple.json"
+	options = parse_options()
 
-	if len(sys.argv) > 2:
-		targetdir = sys.argv[2]
-	else:
-		targetdir = "."
-
-	j = JSONFile(filepath)
+	j = JSONFile(options.jsondatafile)
 	#print("file: " + j.filepath)
 	#print("json: " + json.dumps(j.rawjson, indent=2, sort_keys=True))
 	#print("class name: " + j.classname)
@@ -1224,15 +1233,16 @@ if __name__ == "__main__":
 
 	#print cppheader.filename
 	#print cppheader.content()
-	cppheader.save_to_dir(targetdir)
+	cppheader.save_to_dir(options.dstdir)
 
 	#print cppbodybuilder.content()
-	cppbodybuilder.save_to_dir(targetdir)
+	cppbodybuilder.save_to_dir(options.dstdir)
 	#print cppbodyfile.file_begin + cppbodyfile.file_end
 	#print cppmethodprint.content()
 	#print cppmethoddecode.content()
 	#print cppmethodencode.content()
 
-	cpptest = CppTest(j)
-	cpptest.savefile(os.path.join(targetdir, cpptest.filename))
+	if options.gentest:
+		cpptest = CppTest(j)
+		cpptest.savefile(os.path.join(options.dstdir, cpptest.filename))
 
