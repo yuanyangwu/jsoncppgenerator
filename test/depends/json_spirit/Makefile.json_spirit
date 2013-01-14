@@ -1,17 +1,11 @@
 
-# to be replaced with json file path
-JSON_FILE := ../../TO_REPLACE_JSON_FILE
-
-OUTPUT_APP := output/bin/test
+OUTPUT_LIB := output/bin/libjson_spirit.a
 
 CLIENT_SRC_FILES := $(wildcard $(CURDIR)/src/*.cpp)
 CLIENT_OBJ_FILES := $(patsubst $(CURDIR)/src/%.cpp, $(CURDIR)/output/obj/%.o, $(CLIENT_SRC_FILES))
 
-JSONSPIRIT_DIR=$(CURDIR)/../../../depends/json_spirit/output/dist
-
 CFLAGS := \
 	-I$(CURDIR)/src \
-	-I$(JSONSPIRIT_DIR)/include \
 	-g -O \
 
 STRICT_CFLAGS := $(CFLAGS) -Wall
@@ -19,7 +13,7 @@ STRICT_CFLAGS := $(CFLAGS) -Wall
 LDFLAGS := -g -O -Wall \
 
 
-default: init $(OUTPUT_APP)
+default: init $(OUTPUT_LIB)
 
 init:
 	@mkdir -p output/bin
@@ -29,10 +23,11 @@ clean:
 	rm -fr output
 
 run: $(OUTPUT_APP)
-	@$(OUTPUT_APP) ${JSON_FILE}
+	@$(OUTPUT_APP)
 
-$(OUTPUT_APP): $(CLIENT_OBJ_FILES)
-	g++ -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a
+$(OUTPUT_LIB): $(CLIENT_OBJ_FILES)
+	rm -f $@
+	ar -cvq $@ $^
 
 $(CURDIR)/output/obj/%.o: $(CURDIR)/src/%.cpp
 	g++ $(STRICT_CFLAGS) -c $< -o $@
