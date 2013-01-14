@@ -29,7 +29,8 @@ clean:
 	rm -fr output
 
 run: $(OUTPUT_APP)
-	@$(OUTPUT_APP) ${JSON_FILE}
+	@$(OUTPUT_APP) ${JSON_FILE} | tee output/bin/out.json
+	@../../../util/diff_json.py $(JSON_FILE) output/bin/out.json
 
 $(OUTPUT_APP): $(CLIENT_OBJ_FILES)
 	g++ -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a

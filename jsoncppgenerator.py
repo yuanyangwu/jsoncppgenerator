@@ -1168,7 +1168,7 @@ int main(int argc, char ** argv)
   std::ifstream is(argv[1]);
   ${classname} val;
   val.DecodeJSON(is);
-  val.Print(std::cout);
+  //val.Print(std::cout);
   val.EncodeJSON(std::cout);
   return 0;
 }
