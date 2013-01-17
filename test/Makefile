@@ -1,4 +1,4 @@
-SUBDIRS = depends/json_spirit autotest
+SUBDIRS = depends/json_spirit autotest nulltest
 
 build:
 	for d in $(SUBDIRS); do \
