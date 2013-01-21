@@ -1,0 +1,10 @@
+[
+  {
+    "stringValue": "str1",
+    "intValue": 1
+  },
+  {
+    "stringValue": "str2",
+    "intValue": null
+  }
+]

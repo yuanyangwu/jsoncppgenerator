@@ -1,0 +1,15 @@
+{
+  "stringValue": "str1",
+  "intValue": 1,
+  "realValue": 1.23,
+  "boolValue": false,
+  "arrayValue": [
+    {
+      "stringValue": null,
+      "intValue": 2
+    },
+    {
+      "stringValue": "str2"
+    }
+  ]
+}

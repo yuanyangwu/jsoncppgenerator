@@ -543,6 +543,8 @@ class CppBodyConstant:
 {
   BOOST_FOREACH(json_spirit::Pair pair, obj)
   {
+    if (pair.value_.is_null()) continue;
+
 """
 	)
 
@@ -700,7 +702,6 @@ class CppBodyConstant:
 
 	method_encodejson_object_do_simple_type_template = string.Template(
 """  if (${fieldname}) { obj.push_back(json_spirit::Pair("${jsonname}", *${fieldname})); }
-  else { obj.push_back(json_spirit::Pair("${jsonname}", json_spirit::Value())); }
 """
 	)
 
@@ -711,7 +712,6 @@ class CppBodyConstant:
     (*${fieldname}).EncodeJSON(child);
     obj.push_back(json_spirit::Pair("${jsonname}", child));
   }
-  else { obj.push_back(json_spirit::Pair("${jsonname}", json_spirit::Value())); }
 """
 	)
 
@@ -722,7 +722,6 @@ class CppBodyConstant:
     (*${fieldname}).EncodeJSON(child);
     obj.push_back(json_spirit::Pair("${jsonname}", child));
   }
-  else { obj.push_back(json_spirit::Pair("${jsonname}", json_spirit::Value())); }
 """
 	)
 

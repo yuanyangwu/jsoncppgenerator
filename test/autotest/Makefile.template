@@ -1,6 +1,8 @@
 
 # to be replaced with json file path
 JSON_FILE := ../../TO_REPLACE_JSON_FILE
+JSON_SUB_DIR := $(patsubst %.json, %, $(JSON_FILE))
+JSON_SUB_FILES := $(wildcard $(JSON_SUB_DIR)/*.json)
 
 OUTPUT_APP := output/bin/test
 
@@ -29,8 +31,12 @@ clean:
 	rm -fr output
 
 run: $(OUTPUT_APP)
-	@$(OUTPUT_APP) ${JSON_FILE} | tee output/bin/out.json
-	@../../../util/diff_json.py $(JSON_FILE) output/bin/out.json
+	for f in $(JSON_FILE) $(JSON_SUB_FILES); do \
+		$(OUTPUT_APP) $${f} > output/bin/out.json && \
+		../../../util/diff_json.py $${f} output/bin/out.json && \
+		continue; \
+		echo "Fail on $${f}"; exit 1; \
+	done;
 
 $(OUTPUT_APP): $(CLIENT_OBJ_FILES)
 	g++ -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a

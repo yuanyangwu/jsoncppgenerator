@@ -1,0 +1,19 @@
+[
+  [
+    {
+      "stringValue": "str1",
+      "intValue": 1
+    },
+    {
+      "stringValue": "str2",
+      "intValue": 2
+    }
+  ],
+  [
+    null,
+    {
+      "stringValue": "str3",
+      "intValue": 3
+    }
+  ]
+]
