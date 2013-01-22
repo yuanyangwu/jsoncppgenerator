@@ -1,9 +1,16 @@
 SUBDIRS = depends/json_spirit autotest nulltest
 
-build:
-	for d in $(SUBDIRS); do \
-		make --directory=$${d}; \
-	done
+.PHONY: depends/json_spirit autotest nulltest
+build: autotest nulltest
+
+depends/json_spirit:
+	make --directory=$(@)
+
+autotest: depends/json_spirit
+	make --directory=$(@)
+
+nulltest:
+	make --directory=$(@)
 
 clean:
 	for d in $(SUBDIRS); do \

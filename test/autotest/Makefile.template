@@ -39,8 +39,8 @@ run: $(OUTPUT_APP)
 	done;
 
 $(OUTPUT_APP): $(CLIENT_OBJ_FILES)
-	g++ -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a
+	$(CXX) -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a
 
 $(CURDIR)/output/obj/%.o: $(CURDIR)/src/%.cpp
-	g++ $(STRICT_CFLAGS) -c $< -o $@
+	$(CXX) $(STRICT_CFLAGS) -c $< -o $@
 

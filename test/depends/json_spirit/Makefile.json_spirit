@@ -30,5 +30,5 @@ $(OUTPUT_LIB): $(CLIENT_OBJ_FILES)
 	ar -cvq $@ $^
 
 $(CURDIR)/output/obj/%.o: $(CURDIR)/src/%.cpp
-	g++ $(STRICT_CFLAGS) -c $< -o $@
+	$(CXX) $(STRICT_CFLAGS) -c $< -o $@
 
