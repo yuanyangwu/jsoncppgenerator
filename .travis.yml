@@ -4,3 +4,9 @@ compiler:
 python:
   - "2.6"
 script: make --directory=test
+notifications:
+  recipients:
+    - yuanyang_wu@hotmail.com
+  email:
+    on_success: change
+    on_failure: always
