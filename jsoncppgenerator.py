@@ -1189,18 +1189,18 @@ int main(int argc, char ** argv)
 def parse_options():
 	import optparse
 
-	usage_msg = """usage: %prog [options]"""
+	usage_msg = """usage: %prog [options] JSONFile"""
 	parser = optparse.OptionParser(usage=usage_msg)
-	parser.add_option("--jsondatafile", dest="jsondatafile",
-		help="required, JSON data file path")
 	parser.add_option("--dstdir", dest="dstdir", default=".",
 		help="directory to save the generated code files, default is current directory")
 	parser.add_option("--gentest", action="store_true", dest="gentest", default=False,
 		help="""generate test code "main.cpp", default is false""")
 	options, reminder = parser.parse_args()
-	if options.jsondatafile == None:
+	if len(reminder) != 1:
 		parser.print_help()
 		exit(1)
+
+	options.jsondatafile = reminder[0]
 
 	return options
 

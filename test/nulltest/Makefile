@@ -8,7 +8,7 @@ test_null:
 	@echo "Expect failure with JSON data files having null element or empty object/array"
 	@echo ""
 	for d in $(JSON_FILES); do \
-		$(JSONGENERATOR) --jsondatafile=$${d} 2>/dev/null || continue; \
+		$(JSONGENERATOR) $${d} 2>/dev/null || continue; \
 		echo "Fail on $${d}"; exit 1; \
 	done;
 
