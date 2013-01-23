@@ -282,7 +282,7 @@ ${indent}{
 ${indent}public:
 ${indent}  void DecodeJSON(std::istream & is);
 ${indent}  ${method_decodejson_signature};
-${indent}  void EncodeJSON(std::ostream & os) const;
+${indent}  void EncodeJSON(std::ostream & os, bool isPrettyPrint = false) const;
 ${indent}  ${method_encodejson_signature};
 
 """
@@ -612,7 +612,7 @@ class CppBodyConstant:
 	###############################
 	# encodejson
 	def method_encodejson_ostream_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::EncodeJSON(std::ostream & os) const"
+		return "void " + CppFormat.class_decorator(names) + "::EncodeJSON(std::ostream & os, bool isPrettyPrint) const"
 	method_encodejson_ostream_signature = staticmethod(method_encodejson_ostream_signature)
 
 	method_encodejson_ostream_for_object_template = string.Template(
@@ -620,8 +620,12 @@ class CppBodyConstant:
 {
   json_spirit::Object obj;
   EncodeJSON(obj);
-  json_spirit::write(obj, os,
-    json_spirit::pretty_print|json_spirit::remove_trailing_zeros);
+  unsigned int options = json_spirit::remove_trailing_zeros;
+  if (isPrettyPrint)
+  {
+    options = json_spirit::pretty_print|json_spirit::remove_trailing_zeros;
+  }
+  json_spirit::write(obj, os, options);
 }
 """
 	)
