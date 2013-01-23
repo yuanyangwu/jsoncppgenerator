@@ -11,7 +11,7 @@ def is_equal_with_src_none_skipped(src, dst):
 		return True
 
 	if type(src) != type(dst):
-		if TRACE: print "different type: " + type(src) + " " + type(dst)
+		if TRACE: print "different type: " + str(type(src)) + " " + str(type(dst))
 		return False
 
 	if type(src) == types.DictType:
