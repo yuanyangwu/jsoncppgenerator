@@ -280,7 +280,6 @@ class CppHeaderHandler(JSONBaseHandler):
 ${indent}class ${classname}
 ${indent}{
 ${indent}public:
-${indent}  void Print(std::ostream & os) const;
 ${indent}  void DecodeJSON(std::istream & is);
 ${indent}  ${method_decodejson_signature};
 ${indent}  void EncodeJSON(std::ostream & os) const;
@@ -457,66 +456,6 @@ class CppBodyConstant:
 
 	file_end = """
 """
-
-	###############################
-	# print
-	def method_print_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::Print(std::ostream & os) const"
-
-	method_print_signature = staticmethod(method_print_signature)
-
-	method_print_object_begin_template = string.Template(
-"""${method_signature}
-{
-  os << "${indent}${jsonname}: {" << std::endl;
-"""
-	)
-
-	method_print_object_end_template = string.Template(
-"""  os << "${indent}}" << std::endl;
-}
-"""
-	)
-
-	method_print_array_begin_template = string.Template(
-"""${method_signature}
-{
-  os << "${indent}${jsonname}: [" << std::endl;
-  BOOST_FOREACH(const ArrayElementType & element, m_array)
-  {
-"""
-	)
-
-	method_print_array_end_template = string.Template(
-"""  }
-  os << "${indent}]" << std::endl;
-}
-"""
-	)
-
-	method_print_do_simple_type_for_object_template = string.Template(
-"""  if (${fieldname}) { os << "${indent}" << "${jsonname}" << ":" << *${fieldname} << "," << std::endl; }
-  else { os << "${indent}" << "${jsonname}" << ":" << "<null>" << "," << std::endl; }
-"""
-	)
-
-	method_print_do_objectarray_for_object_template = string.Template(
-"""  if (${fieldname}) { (*${fieldname}).Print(os); }
-  else { os << "${indent}" << "${jsonname}" << ":" << "<null>" << "," << std::endl; }
-"""
-	)
-
-	method_print_do_simple_type_for_array_template = string.Template(
-"""    if (element) { os << "${indent}" << *element << "," << std::endl; }
-    else { os << "${indent}" << "<null>" << "," << std::endl; }
-"""
-	)
-
-	method_print_do_objectarray_for_array_template = string.Template(
-"""    if (element) { (*element).Print(os); }
-    else { os << "${indent}" << "<null>" << "," << std::endl; }
-"""
-	)
 
 	###############################
 	# decodejson
@@ -813,103 +752,6 @@ class CppMethodBaseHandler(JSONBaseHandler):
 		if len(parent_names) == 0:
 			self.filename = CppFormat.bodyfilename(name)
 
-class CppMethodPrintHandler(CppMethodBaseHandler):
-	def __init__(self):
-		CppMethodBaseHandler.__init__(self)
-
-	def handle_object_start(self, parent_names, name):
-		CppMethodBaseHandler.handle_object_start(self, parent_names, name)
-
-		if len(parent_names) > 0:
-			parent_method_print = CppBodyConstant.method_print_signature(parent_names)
-			if self.is_parent_array(name):
-				self.methods[parent_method_print] += CppBodyConstant.method_print_do_objectarray_for_array_template.substitute({
-						"indent": CppFormat.indent(len(parent_names)),
-					})
-			else:
-				self.methods[parent_method_print] += CppBodyConstant.method_print_do_objectarray_for_object_template.substitute({
-						"indent": CppFormat.indent(len(parent_names)),
-						"fieldname": CppFormat.fieldname(name),
-						"jsonname": name
-					})
-
-		names = parent_names[:]
-		names.append(name)
-
-		method_print = CppBodyConstant.method_print_signature(names)
-		self.methods[method_print] = CppBodyConstant.method_print_object_begin_template.substitute({
-				"method_signature": method_print,
-				"indent": CppFormat.indent(len(parent_names)),
-				"jsonname": name
-			})
-
-	def handle_object_end(self, parent_names, name):
-		names = parent_names[:]
-		names.append(name)
-		method_print = CppBodyConstant.method_print_signature(names)
-		self.methods[method_print] += CppBodyConstant.method_print_object_end_template.substitute({
-				"indent": CppFormat.indent(len(parent_names))
-			})
-
-	def handle_array_start(self, parent_names, name):
-		CppMethodBaseHandler.handle_array_start(self, parent_names, name)
-
-		if len(parent_names) > 0:
-			parent_method_print = CppBodyConstant.method_print_signature(parent_names)
-			if self.is_parent_array(name):
-				self.methods[parent_method_print] += CppBodyConstant.method_print_do_objectarray_for_array_template.substitute({
-						"indent": CppFormat.indent(len(parent_names)),
-					})
-			else:
-				self.methods[parent_method_print] += CppBodyConstant.method_print_do_objectarray_for_object_template.substitute({
-						"indent": CppFormat.indent(len(parent_names)),
-						"fieldname": CppFormat.fieldname(name),
-						"jsonname": name
-					})
-
-		names = parent_names[:]
-		names.append(name)
-
-		method_print = CppBodyConstant.method_print_signature(names)
-		self.methods[method_print] = CppBodyConstant.method_print_array_begin_template.substitute({
-				"method_signature": method_print,
-				"indent": CppFormat.indent(len(parent_names)),
-				"jsonname": name
-			})
-
-	def handle_array_end(self, parent_names, name):
-		names = parent_names[:]
-		names.append(name)
-		method_print = CppBodyConstant.method_print_signature(names)
-		self.methods[method_print] += CppBodyConstant.method_print_array_end_template.substitute({
-				"indent": CppFormat.indent(len(parent_names))
-			})
-
-	def handle_simple_type_for_print(self, parent_names, name):
-		parent_method_print = CppBodyConstant.method_print_signature(parent_names)
-		if self.is_parent_array(name):
-			self.methods[parent_method_print] += CppBodyConstant.method_print_do_simple_type_for_array_template.substitute({
-					"indent": CppFormat.indent(len(parent_names))
-				})
-		else:
-			self.methods[parent_method_print] += CppBodyConstant.method_print_do_simple_type_for_object_template.substitute({
-					"fieldname": CppFormat.fieldname(name),
-					"jsonname": name,
-					"indent": CppFormat.indent(len(parent_names))
-				})
-
-	def handle_boolean(self, parent_names, name):
-		self.handle_simple_type_for_print(parent_names, name)
-
-	def handle_float(self, parent_names, name):
-		self.handle_simple_type_for_print(parent_names, name)
-
-	def handle_int(self, parent_names, name):
-		self.handle_simple_type_for_print(parent_names, name)
-
-	def handle_string(self, parent_names, name):
-		self.handle_simple_type_for_print(parent_names, name)
-
 class CppMethodDecodeHandler(CppMethodBaseHandler):
 	def __init__(self):
 		CppMethodBaseHandler.__init__(self)
@@ -1113,11 +955,10 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 class CppBodyBuilder:
 	def __init__(self):
 		self.filehandler = CppBodyFileHandler()
-		self.methodprinthandler = CppMethodPrintHandler()
 		self.methoddecodehandler = CppMethodDecodeHandler()
 		self.methodencodehandler = CppMethodEncodeHandler()
 
-		self.methodhandlers = [self.methodprinthandler, self.methoddecodehandler, self.methodencodehandler]
+		self.methodhandlers = [self.methoddecodehandler, self.methodencodehandler]
 		self.handlers = [self.filehandler]
 		self.handlers.extend(self.methodhandlers)
 
@@ -1167,7 +1008,6 @@ int main(int argc, char ** argv)
   std::ifstream is(argv[1]);
   ${classname} val;
   val.DecodeJSON(is);
-  //val.Print(std::cout);
   val.EncodeJSON(std::cout);
   return 0;
 }
@@ -1222,8 +1062,6 @@ if __name__ == "__main__":
 	walker.json_handlers.extend(cppbodybuilder.handlers)
 	#cppbodyfile = CppBodyFileHandler()
 	#walker.json_handlers.append(cppbodyfile)
-	#cppmethodprint = CppMethodPrintHandler()
-	#walker.json_handlers.append(cppmethodprint)
 	#cppmethoddecode = CppMethodDecodeHandler()
 	#walker.json_handlers.append(cppmethoddecode)
 	#cppmethodencode = CppMethodEncodeHandler()
