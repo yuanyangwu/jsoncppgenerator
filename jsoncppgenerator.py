@@ -215,6 +215,30 @@ class CppFormat:
 	def class_decorator(names):
 		return "::".join([CppFormat.classname(names[-i], names[:len(names)-i]) for i in xrange(len(names), 0, -1)])
 
+	def namespace_begin(namespace):
+		if namespace == "":
+			return ""
+
+		ret = ""
+		level = 0
+		for n in namespace.split("::"):
+			ret += CppFormat.indent(level) + "namespace " + n + "\n"
+			ret += CppFormat.indent(level) + "{\n"
+			level += 1
+		ret += "\n"
+		return ret
+
+	def namespace_end(namespace):
+		if namespace == "":
+			return ""
+
+		ret = "\n"
+		level = namespace.count("::")
+		for n in reversed(namespace.split("::")):
+			ret += CppFormat.indent(level) + "} // namespace " + n + "\n"
+			level -= 1
+		return ret
+
 	headerfilename = staticmethod(headerfilename)
 	bodyfilename = staticmethod(bodyfilename)
 	arrayelement_classname = staticmethod(arrayelement_classname)
@@ -222,6 +246,8 @@ class CppFormat:
 	fieldname = staticmethod(fieldname)
 	indent = staticmethod(indent)
 	class_decorator = staticmethod(class_decorator)
+	namespace_begin = staticmethod(namespace_begin)
+	namespace_end = staticmethod(namespace_end)
 
 class CppHeaderHandler(JSONBaseHandler):
 
@@ -310,14 +336,19 @@ ${indent}  ArrayType m_array;
 """
 	)
 
-	def __init__(self):
+	def __init__(self, namespace):
+		self.namespace = namespace
 		self.filename = ""
 		self.file_begin = ""
 		self.class_decl = ""
 		self.file_end = CppHeaderHandler.file_end
 
 	def content(self):
-		return self.file_begin + self.class_decl + self.file_end
+		return self.file_begin \
+			+ CppFormat.namespace_begin(self.namespace) \
+			+ self.class_decl \
+			+ CppFormat.namespace_end(self.namespace) \
+			+ self.file_end
 
 	def save_to_dir(self, dirpath):
 		f = open(os.path.join(dirpath, self.filename), "w")
@@ -957,7 +988,8 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 		self.handle_simple_type_for_encodejson(parent_names, name)
 
 class CppBodyBuilder:
-	def __init__(self):
+	def __init__(self, namespace):
+		self.namespace = namespace
 		self.filehandler = CppBodyFileHandler()
 		self.methoddecodehandler = CppMethodDecodeHandler()
 		self.methodencodehandler = CppMethodEncodeHandler()
@@ -968,7 +1000,11 @@ class CppBodyBuilder:
 
 	def content(self):
 		method_content = "\n".join([m.content() for m in self.methodhandlers])
-		return self.filehandler.file_begin + method_content + self.filehandler.file_end
+		return self.filehandler.file_begin \
+			+ CppFormat.namespace_begin(self.namespace) \
+			+ method_content \
+			+ CppFormat.namespace_end(self.namespace) \
+			+ self.filehandler.file_end
 
 	def save_to_dir(self, dirpath):
 		f = open(os.path.join(dirpath, self.filehandler.filename), "w")
@@ -1010,7 +1046,7 @@ class CppTest:
 int main(int argc, char ** argv)
 {
   std::ifstream is(argv[1]);
-  ${classname} val;
+  ${namespace}::${classname} val;
   val.DecodeJSON(is);
   val.EncodeJSON(std::cout);
   return 0;
@@ -1018,10 +1054,11 @@ int main(int argc, char ** argv)
 """
 	)
 
-	def __init__(self, jsonfile):
+	def __init__(self, jsonfile, namespace):
 		self.filename = "main.cpp"
 		self.content = CppTest.content_template.substitute({
 				"headerfilename": CppFormat.headerfilename(jsonfile.classname),
+				"namespace": namespace,
 				"classname": CppFormat.classname(jsonfile.classname)
 			})
 
@@ -1037,10 +1074,25 @@ def parse_options():
 	parser = optparse.OptionParser(usage=usage_msg)
 	parser.add_option("--dstdir", dest="dstdir", default=".",
 		help="directory to save the generated code files, default is current directory")
+	parser.add_option("--namespace", dest="namespace", default="",
+		help="""C++ namespace seperated with "::", for example, "com::company". Default is no namespace""")
 	parser.add_option("--gentest", action="store_true", dest="gentest", default=False,
 		help="""generate test code "main.cpp", default is false""")
 	options, reminder = parser.parse_args()
+
+	valid = True
 	if len(reminder) != 1:
+		valid = False
+
+	if valid and (len(options.namespace) > 0):
+		l = options.namespace.split("::")
+		if l.count("") > 0:
+			valid = False
+
+		if len([x for x in l if x.count(":") > 0]) > 0:
+			valid = False
+
+	if not valid:
 		parser.print_help()
 		exit(1)
 
@@ -1059,10 +1111,10 @@ if __name__ == "__main__":
 
 	walker = j.jsonwalker
 	#walker.json_handlers.append(JSONBaseHandler())
-	cppheader = CppHeaderHandler()
+	cppheader = CppHeaderHandler(options.namespace)
 	walker.json_handlers.append(cppheader)
 
-	cppbodybuilder = CppBodyBuilder()
+	cppbodybuilder = CppBodyBuilder(options.namespace)
 	walker.json_handlers.extend(cppbodybuilder.handlers)
 	#cppbodyfile = CppBodyFileHandler()
 	#walker.json_handlers.append(cppbodyfile)
@@ -1084,6 +1136,6 @@ if __name__ == "__main__":
 	#print cppmethodencode.content()
 
 	if options.gentest:
-		cpptest = CppTest(j)
+		cpptest = CppTest(j, options.namespace)
 		cpptest.savefile(os.path.join(options.dstdir, cpptest.filename))
 

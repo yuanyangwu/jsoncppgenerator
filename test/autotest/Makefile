@@ -36,7 +36,7 @@ generate_cases: $(TEST_DIRS)
 
 $(CASE_ROOT_DIR)/%: $(JSON_DIR)/%.json
 	mkdir -p $(@)/src
-	$(JSONGENERATOR) --dstdir=$(@)/src --gentest $(^)
+	$(JSONGENERATOR) --dstdir=$(@)/src --namespace=com::test::json --gentest $(^)
 	sed 's/TO_REPLACE_JSON_FILE/$(subst /,\/,$(^))/g' Makefile.template > $(@)/Makefile
 
 clean:
