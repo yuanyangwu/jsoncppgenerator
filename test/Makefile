@@ -7,7 +7,12 @@ depends/json_spirit:
 	make --directory=$(@)
 
 autotest: depends/json_spirit
-	make --directory=$(@)
+	# no namespace
+	make --directory=$(@) JSON_GENERATOR_OPTIONS=""
+	make clean --directory=$(@)
+	# namespace
+	make --directory=$(@) JSON_GENERATOR_OPTIONS="--namespace=com::test::json"
+	make clean --directory=$(@)
 
 nulltest:
 	make --directory=$(@)
