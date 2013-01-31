@@ -239,6 +239,58 @@ class CppFormat:
 			level -= 1
 		return ret
 
+	def stringtype_w(stringtype):
+		if stringtype == "std::wstring":
+			return "w"
+		return ""
+
+	def stringtype_L(stringtype):
+		if stringtype == "std::wstring":
+			return "L"
+		return ""
+
+	def method_decodejson_istream_signature(names, stringtype):
+		decorator = ""
+		if len(names) > 0:
+			decorator = CppFormat.class_decorator(names) + "::"
+		return "void " + decorator \
+			+ "DecodeJSON(std::" + CppFormat.stringtype_w(stringtype) + "istream & is)"
+
+	def method_decodejson_object_signature(names, stringtype):
+		decorator = ""
+		if len(names) > 0:
+			decorator = CppFormat.class_decorator(names) + "::"
+		return "void " + decorator \
+			+ "DecodeJSON(const json_spirit::" + CppFormat.stringtype_w(stringtype) + "Object & obj)"
+
+	def method_decodejson_array_signature(names, stringtype):
+		decorator = ""
+		if len(names) > 0:
+			decorator = CppFormat.class_decorator(names) + "::"
+		return "void " + decorator \
+			+ "DecodeJSON(const json_spirit::" + CppFormat.stringtype_w(stringtype) + "Array & array)"
+
+	def method_encodejson_ostream_signature(names, stringtype):
+		decorator = ""
+		if len(names) > 0:
+			decorator = CppFormat.class_decorator(names) + "::"
+		return "void " + decorator \
+			+ "EncodeJSON(std::" + CppFormat.stringtype_w(stringtype) + "ostream & os, bool isPrettyPrint) const"
+
+	def method_encodejson_object_signature(names, stringtype):
+		decorator = ""
+		if len(names) > 0:
+			decorator = CppFormat.class_decorator(names) + "::"
+		return "void " + decorator \
+			+ "EncodeJSON(json_spirit::" + CppFormat.stringtype_w(stringtype) + "Object & obj) const"
+
+	def method_encodejson_array_signature(names, stringtype):
+		decorator = ""
+		if len(names) > 0:
+			decorator = CppFormat.class_decorator(names) + "::"
+		return "void " + decorator \
+			+ "EncodeJSON(json_spirit::" + CppFormat.stringtype_w(stringtype) + "Array & array) const"
+
 	headerfilename = staticmethod(headerfilename)
 	bodyfilename = staticmethod(bodyfilename)
 	arrayelement_classname = staticmethod(arrayelement_classname)
@@ -248,13 +300,16 @@ class CppFormat:
 	class_decorator = staticmethod(class_decorator)
 	namespace_begin = staticmethod(namespace_begin)
 	namespace_end = staticmethod(namespace_end)
+	stringtype_w = staticmethod(stringtype_w)
+	stringtype_L = staticmethod(stringtype_L)
+	method_decodejson_istream_signature = staticmethod(method_decodejson_istream_signature)
+	method_decodejson_object_signature = staticmethod(method_decodejson_object_signature)
+	method_decodejson_array_signature = staticmethod(method_decodejson_array_signature)
+	method_encodejson_ostream_signature = staticmethod(method_encodejson_ostream_signature)
+	method_encodejson_object_signature = staticmethod(method_encodejson_object_signature)
+	method_encodejson_array_signature = staticmethod(method_encodejson_array_signature)
 
 class CppHeaderHandler(JSONBaseHandler):
-
-	method_decodejson_object_signature = "void DecodeJSON(const json_spirit::Object & obj)"
-	method_decodejson_array_signature = "void DecodeJSON(const json_spirit::Array & array)"
-	method_encodejson_object_signature = "void EncodeJSON(json_spirit::Object & obj) const"
-	method_encodejson_array_signature = "void EncodeJSON(json_spirit::Array & array) const"
 
 	file_begin_template = string.Template(
 """
@@ -306,9 +361,9 @@ class CppHeaderHandler(JSONBaseHandler):
 ${indent}class ${classname}
 ${indent}{
 ${indent}public:
-${indent}  void DecodeJSON(std::istream & is);
+${indent}  void DecodeJSON(std::${w}istream & is);
 ${indent}  ${method_decodejson_signature};
-${indent}  void EncodeJSON(std::ostream & os, bool isPrettyPrint = false) const;
+${indent}  void EncodeJSON(std::${w}ostream & os, bool isPrettyPrint = false) const;
 ${indent}  ${method_encodejson_signature};
 
 """
@@ -336,8 +391,9 @@ ${indent}  ArrayType m_array;
 """
 	)
 
-	def __init__(self, namespace):
+	def __init__(self, namespace, stringtype):
 		self.namespace = namespace
+		self.stringtype = stringtype
 		self.filename = ""
 		self.file_begin = ""
 		self.class_decl = ""
@@ -367,8 +423,9 @@ ${indent}  ArrayType m_array;
 		self.class_decl += CppHeaderHandler.class_begin_template.substitute({
 				"indent": CppFormat.indent(len(parent_names)),
 				"classname" : classname,
-				"method_decodejson_signature": CppHeaderHandler.method_decodejson_object_signature,
-				"method_encodejson_signature": CppHeaderHandler.method_encodejson_object_signature
+				"w": CppFormat.stringtype_w(self.stringtype),
+				"method_decodejson_signature": CppFormat.method_decodejson_object_signature([], self.stringtype),
+				"method_encodejson_signature": CppFormat.method_encodejson_object_signature([], self.stringtype)
 			})
 
 	def handle_object_end(self, parent_names, name):
@@ -399,8 +456,9 @@ ${indent}  ArrayType m_array;
 		self.class_decl += CppHeaderHandler.class_begin_template.substitute({
 				"indent": CppFormat.indent(len(parent_names)),
 				"classname" : CppFormat.classname(name),
-				"method_decodejson_signature": CppHeaderHandler.method_decodejson_array_signature,
-				"method_encodejson_signature": CppHeaderHandler.method_encodejson_array_signature
+				"w": CppFormat.stringtype_w(self.stringtype),
+				"method_decodejson_signature": CppFormat.method_decodejson_array_signature([], self.stringtype),
+				"method_encodejson_signature": CppFormat.method_encodejson_array_signature([], self.stringtype)
 			})
 
 	def handle_array_end(self, parent_names, name):
@@ -434,7 +492,7 @@ ${indent}  ArrayType m_array;
 		self.handle_simple_type(parent_names, name, "int")
 
 	def handle_string(self, parent_names, name):
-		self.handle_simple_type(parent_names, name, "std::string")
+		self.handle_simple_type(parent_names, name, self.stringtype)
 
 	def handle_simple_type(self, parent_names, name, cpptype):
 		if self.is_parent_array(name):
@@ -490,28 +548,20 @@ class CppBodyConstant:
 
 	###############################
 	# decodejson
-	def method_decodejson_istream_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::DecodeJSON(std::istream & is)"
-	method_decodejson_istream_signature = staticmethod(method_decodejson_istream_signature)
-
 	method_decodejson_istream_for_object_template = string.Template(
 """${method_signature}
 {
-  json_spirit::Value value;
+  json_spirit::${w}Value value;
   json_spirit::read(is, value);
   DecodeJSON(value.get_obj());
 }
 """
 	)
 
-	def method_decodejson_object_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::DecodeJSON(const json_spirit::Object & obj)"
-	method_decodejson_object_signature = staticmethod(method_decodejson_object_signature)
-
 	method_decodejson_object_begin_template = string.Template(
 """${method_signature}
 {
-  BOOST_FOREACH(json_spirit::Pair pair, obj)
+  BOOST_FOREACH(json_spirit::${w}Pair pair, obj)
   {
     if (pair.value_.is_null()) continue;
 
@@ -519,7 +569,7 @@ class CppBodyConstant:
 	)
 
 	method_decodejson_object_do_bool_template = string.Template(
-"""    if (pair.name_ == "${jsonname}")
+"""    if (pair.name_ == ${L}"${jsonname}")
     {
       ${fieldname} = pair.value_.get_bool();
     }
@@ -528,7 +578,7 @@ class CppBodyConstant:
 	)
 
 	method_decodejson_object_do_int_template = string.Template(
-"""    if (pair.name_ == "${jsonname}")
+"""    if (pair.name_ == ${L}"${jsonname}")
     {
       ${fieldname} = pair.value_.get_int();
     }
@@ -537,7 +587,7 @@ class CppBodyConstant:
 	)
 
 	method_decodejson_object_do_float_template = string.Template(
-"""    if (pair.name_ == "${jsonname}")
+"""    if (pair.name_ == ${L}"${jsonname}")
     {
       ${fieldname} = pair.value_.get_real();
     }
@@ -546,7 +596,7 @@ class CppBodyConstant:
 	)
 
 	method_decodejson_object_do_string_template = string.Template(
-"""    if (pair.name_ == "${jsonname}")
+"""    if (pair.name_ == ${L}"${jsonname}")
     {
       ${fieldname} = pair.value_.get_str();
     }
@@ -555,7 +605,7 @@ class CppBodyConstant:
 	)
 
 	method_decodejson_object_do_object_template = string.Template(
-"""    if (pair.name_ == "${jsonname}")
+"""    if (pair.name_ == ${L}"${jsonname}")
     {
       ${classname} value;
       value.DecodeJSON(pair.value_.get_obj());
@@ -566,7 +616,7 @@ class CppBodyConstant:
 	)
 
 	method_decodejson_object_do_array_template = string.Template(
-"""    if (pair.name_ == "${jsonname}")
+"""    if (pair.name_ == ${L}"${jsonname}")
     {
       ${classname} value;
       value.DecodeJSON(pair.value_.get_array());
@@ -586,21 +636,17 @@ class CppBodyConstant:
 	method_decodejson_istream_for_array_template = string.Template(
 """${method_signature}
 {
-  json_spirit::Value value;
+  json_spirit::${w}Value value;
   json_spirit::read(is, value);
   DecodeJSON(value.get_array());
 }
 """
 	)
 
-	def method_decodejson_array_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::DecodeJSON(const json_spirit::Array & array)"
-	method_decodejson_array_signature = staticmethod(method_decodejson_array_signature)
-
 	method_decodejson_array_begin_template = string.Template(
 """${method_signature}
 {
-  BOOST_FOREACH(const json_spirit::Value & value, array)
+  BOOST_FOREACH(const json_spirit::${w}Value & value, array)
   {
     ArrayElementType element;
     if (!value.is_null())
@@ -642,14 +688,10 @@ class CppBodyConstant:
 
 	###############################
 	# encodejson
-	def method_encodejson_ostream_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::EncodeJSON(std::ostream & os, bool isPrettyPrint) const"
-	method_encodejson_ostream_signature = staticmethod(method_encodejson_ostream_signature)
-
 	method_encodejson_ostream_for_object_template = string.Template(
 """${method_signature}
 {
-  json_spirit::Object obj;
+  json_spirit::${w}Object obj;
   EncodeJSON(obj);
   unsigned int options = json_spirit::remove_trailing_zeros;
   if (isPrettyPrint)
@@ -661,10 +703,6 @@ class CppBodyConstant:
 """
 	)
 
-	def method_encodejson_object_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::EncodeJSON(json_spirit::Object & obj) const"
-	method_encodejson_object_signature = staticmethod(method_encodejson_object_signature)
-
 	method_encodejson_object_begin_template = string.Template(
 """${method_signature}
 {
@@ -675,16 +713,16 @@ class CppBodyConstant:
 """
 
 	method_encodejson_object_do_simple_type_template = string.Template(
-"""  if (${fieldname}) { obj.push_back(json_spirit::Pair("${jsonname}", *${fieldname})); }
+"""  if (${fieldname}) { obj.push_back(json_spirit::${w}Pair(${L}"${jsonname}", *${fieldname})); }
 """
 	)
 
 	method_encodejson_object_do_object_template = string.Template(
 """  if (${fieldname})
   {
-    json_spirit::Object child;
+    json_spirit::${w}Object child;
     (*${fieldname}).EncodeJSON(child);
-    obj.push_back(json_spirit::Pair("${jsonname}", child));
+    obj.push_back(json_spirit::${w}Pair(${L}"${jsonname}", child));
   }
 """
 	)
@@ -692,9 +730,9 @@ class CppBodyConstant:
 	method_encodejson_object_do_array_template = string.Template(
 """  if (${fieldname})
   {
-    json_spirit::Array child;
+    json_spirit::${w}Array child;
     (*${fieldname}).EncodeJSON(child);
-    obj.push_back(json_spirit::Pair("${jsonname}", child));
+    obj.push_back(json_spirit::${w}Pair(${L}"${jsonname}", child));
   }
 """
 	)
@@ -702,17 +740,13 @@ class CppBodyConstant:
 	method_encodejson_ostream_for_array_template = string.Template(
 """${method_signature}
 {
-  json_spirit::Array array;
+  json_spirit::${w}Array array;
   EncodeJSON(array);
   json_spirit::write(array, os,
     json_spirit::pretty_print|json_spirit::remove_trailing_zeros);
 }
 """
 	)
-
-	def method_encodejson_array_signature(names):
-		return "void " + CppFormat.class_decorator(names) + "::EncodeJSON(json_spirit::Array & array) const"
-	method_encodejson_array_signature = staticmethod(method_encodejson_array_signature)
 
 	method_encodejson_array_begin_template = string.Template(
 """${method_signature}
@@ -726,30 +760,36 @@ class CppBodyConstant:
 }
 """
 
-	method_encodejson_array_do_simple_type = """
-    if (value) { array.push_back(json_spirit::Value(*value)); }
-    else { array.push_back(json_spirit::Value()); }
+	method_encodejson_array_do_simple_type_template = string.Template(
 """
+    if (value) { array.push_back(json_spirit::${w}Value(*value)); }
+    else { array.push_back(json_spirit::${w}Value()); }
+"""
+	)
 
-	method_encodejson_array_do_object = """    if (value)
+	method_encodejson_array_do_object_template = string.Template(
+"""    if (value)
     {
-      json_spirit::Object child;
+      json_spirit::${w}Object child;
       (*value).EncodeJSON(child);
-      array.push_back(json_spirit::Value(child));
+      array.push_back(json_spirit::${w}Value(child));
     }
-    else { array.push_back(json_spirit::Value()); }
+    else { array.push_back(json_spirit::${w}Value()); }
 
 """
+	)
 
-	method_encodejson_array_do_array = """    if (value)
+	method_encodejson_array_do_array_template = string.Template(
+"""    if (value)
     {
-      json_spirit::Array child;
+      json_spirit::${w}Array child;
       (*value).EncodeJSON(child);
-      array.push_back(json_spirit::Value(child));
+      array.push_back(json_spirit::${w}Value(child));
     }
-    else { array.push_back(json_spirit::Value()); }
+    else { array.push_back(json_spirit::${w}Value()); }
 
 """
+	)
 
 class CppBodyFileHandler(JSONBaseHandler):
 	def __init__(self):
@@ -772,8 +812,9 @@ class CppBodyFileHandler(JSONBaseHandler):
 				})
 
 class CppMethodBaseHandler(JSONBaseHandler):
-	def __init__(self):
+	def __init__(self, stringtype):
 		self.filename = ""
+		self.stringtype = stringtype
 		self.methods = {}
 
 	def content(self):
@@ -788,41 +829,44 @@ class CppMethodBaseHandler(JSONBaseHandler):
 			self.filename = CppFormat.bodyfilename(name)
 
 class CppMethodDecodeHandler(CppMethodBaseHandler):
-	def __init__(self):
-		CppMethodBaseHandler.__init__(self)
+	def __init__(self, stringtype):
+		CppMethodBaseHandler.__init__(self, stringtype)
 
 	def handle_object_start(self, parent_names, name):
 		CppMethodBaseHandler.handle_object_start(self, parent_names, name)
 
 		if len(parent_names) > 0:
 			if self.is_parent_array(name):
-				parent_method_decodejson_array = CppBodyConstant.method_decodejson_array_signature(parent_names)
+				parent_method_decodejson_array = CppFormat.method_decodejson_array_signature(parent_names, self.stringtype)
 				self.methods[parent_method_decodejson_array] += CppBodyConstant.method_decodejson_array_do_object_template.substitute({"classname": CppFormat.classname(name, parent_names)})
 			else:
-				parent_method_decodejson_object = CppBodyConstant.method_decodejson_object_signature(parent_names)
+				parent_method_decodejson_object = CppFormat.method_decodejson_object_signature(parent_names, self.stringtype)
 				self.methods[parent_method_decodejson_object] += CppBodyConstant.method_decodejson_object_do_object_template.substitute({
 						"jsonname": name,
 						"fieldname": CppFormat.fieldname(name),
-						"classname": CppFormat.classname(name)
+						"classname": CppFormat.classname(name),
+						"L": CppFormat.stringtype_L(self.stringtype)
 					})
 
 		names = parent_names[:]
 		names.append(name)
 
-		method_decodejson_istream = CppBodyConstant.method_decodejson_istream_signature(names)
+		method_decodejson_istream = CppFormat.method_decodejson_istream_signature(names, self.stringtype)
 		self.methods[method_decodejson_istream] = CppBodyConstant.method_decodejson_istream_for_object_template.substitute({
-				"method_signature": method_decodejson_istream
+				"method_signature": method_decodejson_istream,
+				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
-		method_decodejson_object = CppBodyConstant.method_decodejson_object_signature(names)
+		method_decodejson_object = CppFormat.method_decodejson_object_signature(names, self.stringtype)
 		self.methods[method_decodejson_object] = CppBodyConstant.method_decodejson_object_begin_template.substitute({
-				"method_signature": method_decodejson_object
+				"method_signature": method_decodejson_object,
+				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
 	def handle_object_end(self, parent_names, name):
 		names = parent_names[:]
 		names.append(name)
-		method_decodejson_object = CppBodyConstant.method_decodejson_object_signature(names)
+		method_decodejson_object = CppFormat.method_decodejson_object_signature(names, self.stringtype)
 		self.methods[method_decodejson_object] += CppBodyConstant.method_decodejson_object_end
 
 	def handle_array_start(self, parent_names, name):
@@ -830,44 +874,48 @@ class CppMethodDecodeHandler(CppMethodBaseHandler):
 
 		if len(parent_names) > 0:
 			if self.is_parent_array(name):
-				parent_method_decodejson_array = CppBodyConstant.method_decodejson_array_signature(parent_names)
+				parent_method_decodejson_array = CppFormat.method_decodejson_array_signature(parent_names, self.stringtype)
 				self.methods[parent_method_decodejson_array] += CppBodyConstant.method_decodejson_array_do_array_template.substitute({"classname": CppFormat.classname(name, parent_names)})
 			else:
-				parent_method_decodejson_object = CppBodyConstant.method_decodejson_object_signature(parent_names)
+				parent_method_decodejson_object = CppFormat.method_decodejson_object_signature(parent_names, self.stringtype)
 				self.methods[parent_method_decodejson_object] += CppBodyConstant.method_decodejson_object_do_array_template.substitute({
 						"jsonname": name,
 						"fieldname": CppFormat.fieldname(name),
-						"classname": CppFormat.classname(name)
+						"classname": CppFormat.classname(name),
+						"L": CppFormat.stringtype_L(self.stringtype)
 					})
 
 		names = parent_names[:]
 		names.append(name)
 
-		method_decodejson_istream = CppBodyConstant.method_decodejson_istream_signature(names)
+		method_decodejson_istream = CppFormat.method_decodejson_istream_signature(names, self.stringtype)
 		self.methods[method_decodejson_istream] = CppBodyConstant.method_decodejson_istream_for_array_template.substitute({
-				"method_signature": method_decodejson_istream
+				"method_signature": method_decodejson_istream,
+				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
-		method_decodejson_array = CppBodyConstant.method_decodejson_array_signature(names)
+		method_decodejson_array = CppFormat.method_decodejson_array_signature(names, self.stringtype)
 		self.methods[method_decodejson_array] = CppBodyConstant.method_decodejson_array_begin_template.substitute({
-				"method_signature": method_decodejson_array
+				"method_signature": method_decodejson_array,
+				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
 	def handle_array_end(self, parent_names, name):
 		names = parent_names[:]
 		names.append(name)
-		method_decodejson_array = CppBodyConstant.method_decodejson_array_signature(names)
+		method_decodejson_array = CppFormat.method_decodejson_array_signature(names, self.stringtype)
 		self.methods[method_decodejson_array] += CppBodyConstant.method_decodejson_array_end
 
 	def handle_simple_type_for_decodejson(self, parent_names, name, array_string, object_template):
 		if self.is_parent_array(name):
-			parent_method_decodejson_array = CppBodyConstant.method_decodejson_array_signature(parent_names)
+			parent_method_decodejson_array = CppFormat.method_decodejson_array_signature(parent_names, self.stringtype)
 			self.methods[parent_method_decodejson_array] += array_string
 		else:
-			parent_method_decodejson_object = CppBodyConstant.method_decodejson_object_signature(parent_names)
+			parent_method_decodejson_object = CppFormat.method_decodejson_object_signature(parent_names, self.stringtype)
 			self.methods[parent_method_decodejson_object] += object_template.substitute({
 					"jsonname": name,
-					"fieldname": CppFormat.fieldname(name)
+					"fieldname": CppFormat.fieldname(name),
+					"L": CppFormat.stringtype_L(self.stringtype)
 				})
 
 	def handle_boolean(self, parent_names, name):
@@ -895,32 +943,37 @@ class CppMethodDecodeHandler(CppMethodBaseHandler):
 			)
 
 class CppMethodEncodeHandler(CppMethodBaseHandler):
-	def __init__(self):
-		CppMethodBaseHandler.__init__(self)
+	def __init__(self, stringtype):
+		CppMethodBaseHandler.__init__(self, stringtype)
 
 	def handle_object_start(self, parent_names, name):
 		CppMethodBaseHandler.handle_object_start(self, parent_names, name)
 
 		if len(parent_names) > 0:
 			if self.is_parent_array(name):
-				parent_method_encodejson_array = CppBodyConstant.method_encodejson_array_signature(parent_names)
-				self.methods[parent_method_encodejson_array] += CppBodyConstant.method_encodejson_array_do_object
+				parent_method_encodejson_array = CppFormat.method_encodejson_array_signature(parent_names, self.stringtype)
+				self.methods[parent_method_encodejson_array] += CppBodyConstant.method_encodejson_array_do_object_template.substitute({
+					"w": CppFormat.stringtype_w(self.stringtype)
+					})
 			else:
-				parent_method_encodejson_object = CppBodyConstant.method_encodejson_object_signature(parent_names)
+				parent_method_encodejson_object = CppFormat.method_encodejson_object_signature(parent_names, self.stringtype)
 				self.methods[parent_method_encodejson_object] += CppBodyConstant.method_encodejson_object_do_object_template.substitute({
 						"jsonname": name,
-						"fieldname": CppFormat.fieldname(name)
+						"fieldname": CppFormat.fieldname(name),
+						"w": CppFormat.stringtype_w(self.stringtype),
+						"L": CppFormat.stringtype_L(self.stringtype)
 					})
 
 		names = parent_names[:]
 		names.append(name)
 
-		method_encodejson_ostream = CppBodyConstant.method_encodejson_ostream_signature(names)
+		method_encodejson_ostream = CppFormat.method_encodejson_ostream_signature(names, self.stringtype)
 		self.methods[method_encodejson_ostream] = CppBodyConstant.method_encodejson_ostream_for_object_template.substitute({
-				"method_signature": method_encodejson_ostream
+				"method_signature": method_encodejson_ostream,
+				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
-		method_encodejson_object = CppBodyConstant.method_encodejson_object_signature(names)
+		method_encodejson_object = CppFormat.method_encodejson_object_signature(names, self.stringtype)
 		self.methods[method_encodejson_object] = CppBodyConstant.method_encodejson_object_begin_template.substitute({
 				"method_signature": method_encodejson_object
 			})
@@ -928,7 +981,7 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 	def handle_object_end(self, parent_names, name):
 		names = parent_names[:]
 		names.append(name)
-		method_encodejson_object = CppBodyConstant.method_encodejson_object_signature(names)
+		method_encodejson_object = CppFormat.method_encodejson_object_signature(names, self.stringtype)
 		self.methods[method_encodejson_object] += CppBodyConstant.method_encodejson_object_end
 
 	def handle_array_start(self, parent_names, name):
@@ -936,24 +989,29 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 
 		if len(parent_names) > 0:
 			if self.is_parent_array(name):
-				parent_method_encodejson_array = CppBodyConstant.method_encodejson_array_signature(parent_names)
-				self.methods[parent_method_encodejson_array] += CppBodyConstant.method_encodejson_array_do_array
+				parent_method_encodejson_array = CppFormat.method_encodejson_array_signature(parent_names, self.stringtype)
+				self.methods[parent_method_encodejson_array] += CppBodyConstant.method_encodejson_array_do_array_template.substitute({
+					"w": CppFormat.stringtype_w(self.stringtype)
+					})
 			else:
-				parent_method_encodejson_object = CppBodyConstant.method_encodejson_object_signature(parent_names)
+				parent_method_encodejson_object = CppFormat.method_encodejson_object_signature(parent_names, self.stringtype)
 				self.methods[parent_method_encodejson_object] += CppBodyConstant.method_encodejson_object_do_array_template.substitute({
 						"jsonname": name,
-						"fieldname": CppFormat.fieldname(name)
+						"fieldname": CppFormat.fieldname(name),
+						"w": CppFormat.stringtype_w(self.stringtype),
+						"L": CppFormat.stringtype_L(self.stringtype)
 					})
 
 		names = parent_names[:]
 		names.append(name)
 
-		method_encodejson_ostream = CppBodyConstant.method_encodejson_ostream_signature(names)
+		method_encodejson_ostream = CppFormat.method_encodejson_ostream_signature(names, self.stringtype)
 		self.methods[method_encodejson_ostream] = CppBodyConstant.method_encodejson_ostream_for_array_template.substitute({
-				"method_signature": method_encodejson_ostream
+				"method_signature": method_encodejson_ostream,
+				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
-		method_encodejson_array = CppBodyConstant.method_encodejson_array_signature(names)
+		method_encodejson_array = CppFormat.method_encodejson_array_signature(names, self.stringtype)
 		self.methods[method_encodejson_array] = CppBodyConstant.method_encodejson_array_begin_template.substitute({
 				"method_signature": method_encodejson_array
 			})
@@ -961,18 +1019,22 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 	def handle_array_end(self, parent_names, name):
 		names = parent_names[:]
 		names.append(name)
-		method_encodejson_array = CppBodyConstant.method_encodejson_array_signature(names)
+		method_encodejson_array = CppFormat.method_encodejson_array_signature(names, self.stringtype)
 		self.methods[method_encodejson_array] += CppBodyConstant.method_encodejson_array_end
 
 	def handle_simple_type_for_encodejson(self, parent_names, name):
 		if self.is_parent_array(name):
-			parent_method_encodejson_array = CppBodyConstant.method_encodejson_array_signature(parent_names)
-			self.methods[parent_method_encodejson_array] += CppBodyConstant.method_encodejson_array_do_simple_type
+			parent_method_encodejson_array = CppFormat.method_encodejson_array_signature(parent_names, self.stringtype)
+			self.methods[parent_method_encodejson_array] += CppBodyConstant.method_encodejson_array_do_simple_type_template.substitute({
+				"w": CppFormat.stringtype_w(self.stringtype)
+				})
 		else:
-			parent_method_encodejson_object = CppBodyConstant.method_encodejson_object_signature(parent_names)
+			parent_method_encodejson_object = CppFormat.method_encodejson_object_signature(parent_names, self.stringtype)
 			self.methods[parent_method_encodejson_object] += CppBodyConstant.method_encodejson_object_do_simple_type_template.substitute({
 					"jsonname": name,
-					"fieldname": CppFormat.fieldname(name)
+					"fieldname": CppFormat.fieldname(name),
+					"w": CppFormat.stringtype_w(self.stringtype),
+					"L": CppFormat.stringtype_L(self.stringtype)
 				})
 
 	def handle_boolean(self, parent_names, name):
@@ -988,11 +1050,12 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 		self.handle_simple_type_for_encodejson(parent_names, name)
 
 class CppBodyBuilder:
-	def __init__(self, namespace):
+	def __init__(self, namespace, stringtype):
 		self.namespace = namespace
+		self.stringtype = stringtype
 		self.filehandler = CppBodyFileHandler()
-		self.methoddecodehandler = CppMethodDecodeHandler()
-		self.methodencodehandler = CppMethodEncodeHandler()
+		self.methoddecodehandler = CppMethodDecodeHandler(stringtype)
+		self.methodencodehandler = CppMethodEncodeHandler(stringtype)
 
 		self.methodhandlers = [self.methoddecodehandler, self.methodencodehandler]
 		self.handlers = [self.filehandler]
@@ -1045,20 +1108,21 @@ class CppTest:
 
 int main(int argc, char ** argv)
 {
-  std::ifstream is(argv[1]);
+  std::${w}ifstream is(argv[1]);
   ${namespace}::${classname} val;
   val.DecodeJSON(is);
-  val.EncodeJSON(std::cout);
+  val.EncodeJSON(std::${w}cout);
   return 0;
 }
 """
 	)
 
-	def __init__(self, jsonfile, namespace):
+	def __init__(self, jsonfile, namespace, stringtype):
 		self.filename = "main.cpp"
 		self.content = CppTest.content_template.substitute({
 				"headerfilename": CppFormat.headerfilename(jsonfile.classname),
 				"namespace": namespace,
+				"w": CppFormat.stringtype_w(stringtype),
 				"classname": CppFormat.classname(jsonfile.classname)
 			})
 
@@ -1076,6 +1140,8 @@ def parse_options():
 		help="directory to save the generated code files, default is current directory")
 	parser.add_option("--namespace", dest="namespace", default="",
 		help="""C++ namespace seperated with "::", for example, "com::company". Default is no namespace""")
+	parser.add_option("--stringtype", dest="stringtype", default="std::string",
+		help="""C++ string type, std::string or std::wstring, default is std::string""")
 	parser.add_option("--gentest", action="store_true", dest="gentest", default=False,
 		help="""generate test code "main.cpp", default is false""")
 	options, reminder = parser.parse_args()
@@ -1091,6 +1157,9 @@ def parse_options():
 
 		if len([x for x in l if x.count(":") > 0]) > 0:
 			valid = False
+
+	if valid and (options.stringtype not in ["std::string", "std::wstring"]):
+		valid = False
 
 	if not valid:
 		parser.print_help()
@@ -1111,10 +1180,10 @@ if __name__ == "__main__":
 
 	walker = j.jsonwalker
 	#walker.json_handlers.append(JSONBaseHandler())
-	cppheader = CppHeaderHandler(options.namespace)
+	cppheader = CppHeaderHandler(options.namespace, options.stringtype)
 	walker.json_handlers.append(cppheader)
 
-	cppbodybuilder = CppBodyBuilder(options.namespace)
+	cppbodybuilder = CppBodyBuilder(options.namespace, options.stringtype)
 	walker.json_handlers.extend(cppbodybuilder.handlers)
 	#cppbodyfile = CppBodyFileHandler()
 	#walker.json_handlers.append(cppbodyfile)
@@ -1136,6 +1205,6 @@ if __name__ == "__main__":
 	#print cppmethodencode.content()
 
 	if options.gentest:
-		cpptest = CppTest(j, options.namespace)
+		cpptest = CppTest(j, options.namespace, options.stringtype)
 		cpptest.savefile(os.path.join(options.dstdir, cpptest.filename))
 
