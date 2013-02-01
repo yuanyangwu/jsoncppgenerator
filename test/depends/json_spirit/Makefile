@@ -1,21 +1,23 @@
+JSON_SPIRIT_VERSION=json_spirit_v4.05
+
 default: build_dist
 
 download:
-	if [ ! -f output/download/master.zip ]; then \
+	if [ ! -f output/download/$(JSON_SPIRIT_VERSION).zip ]; then \
 	  mkdir -p output/download && \
-	  wget https://github.com/png85/json_spirit/archive/master.zip --directory-prefix=output/download; \
+	  cp $(JSON_SPIRIT_VERSION).zip output/download; \
 	fi
 
 extracted: download
 	if [ ! -d output/extracted ]; then \
 	  mkdir -p output/extracted; \
-	  unzip -q output/download/master.zip -d output/extracted; \
+	  unzip -q output/download/$(JSON_SPIRIT_VERSION).zip -d output/extracted; \
 	fi
 
 build_src: extracted
 	if [ ! -f output/build/Makefile ]; then \
 	  mkdir -p output/build/src && \
-	  cp output/extracted/json-spirit-master/json_spirit/* output/build/src && \
+	  cp output/extracted/$(JSON_SPIRIT_VERSION)/json_spirit/* output/build/src && \
 	  cp Makefile.json_spirit output/build/Makefile; \
 	fi
 	make --directory=output/build
