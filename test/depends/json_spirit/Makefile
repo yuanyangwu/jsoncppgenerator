@@ -1,10 +1,9 @@
-
 default: build_dist
 
 download:
 	if [ ! -f output/download/master.zip ]; then \
 	  mkdir -p output/download && \
-	  wget https://github.com/geli1988/json-spirit/archive/master.zip --directory-prefix=output/download; \
+	  wget https://github.com/wagerlabs/json-spirit/archive/master.zip --directory-prefix=output/download; \
 	fi
 
 extracted: download
