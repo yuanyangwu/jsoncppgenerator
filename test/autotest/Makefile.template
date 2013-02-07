@@ -33,7 +33,7 @@ clean:
 run: $(OUTPUT_APP)
 	for f in $(JSON_FILE) $(JSON_SUB_FILES); do \
 		$(OUTPUT_APP) $${f} > output/bin/out.json && \
-		../../../util/diff_json.py $${f} output/bin/out.json && \
+		../../../../diff_json.py $${f} output/bin/out.json && \
 		continue; \
 		echo "Fail on $${f}"; exit 1; \
 	done;
