@@ -1,4 +1,4 @@
-JSONDATA2CPP := ../../jsondata2cpp.py
+JSONDATA2CPP := ../../../jsondata2cpp.py
 JSON_DIR := ../data
 
 JSON_FILES := \
