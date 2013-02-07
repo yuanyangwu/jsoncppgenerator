@@ -1,4 +1,4 @@
-JSONGENERATOR := ../../jsoncppgenerator.py
+JSONDATA2CPP := ../../jsondata2cpp.py
 JSON_DIR := ../data
 
 JSON_FILES := \
@@ -36,7 +36,7 @@ generate_cases: $(TEST_DIRS)
 
 $(CASE_ROOT_DIR)/%: $(JSON_DIR)/%.json
 	mkdir -p $(@)/src
-	$(JSONGENERATOR) --dstdir=$(@)/src $(JSON_GENERATOR_OPTIONS) --gentest $(^)
+	$(JSONDATA2CPP) --dstdir=$(@)/src $(JSON_GENERATOR_OPTIONS) --gentest $(^)
 	sed 's/TO_REPLACE_JSON_FILE/$(subst /,\/,$(^))/g' Makefile.template > $(@)/Makefile
 
 clean:
