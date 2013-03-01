@@ -1,0 +1,24 @@
+{
+  "topIntValue": 1000,
+  "topIntValues": [2000, 3000],
+  "complexValue": {
+      "intValue": 1,
+      "intValues": [2, 3],
+      "stringRange": "a",
+      "stringRanges": ["b", "c"]
+    },
+  "complexValues": [
+      {
+        "intValue": 10,
+        "intValues": [20, 30],
+        "stringRange": "aa",
+        "stringRanges": ["bb", "cc"]
+      },
+      {
+        "intValue": 100,
+        "intValues": [200, 300],
+        "stringRange": "aaa",
+        "stringRanges": ["bbb", "ccc"]
+      }
+    ]
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- basicType (single) -->
+  <xs:element name="intValue" type="xs:int" minOccurs="0" maxOccurs="1"/>
+  <xs:element name="longValue" type="xs:long" maxOccurs="1"/>
+  <xs:element name="doubleValue" type="xs:double"/>
+  <xs:element name="stringValue" type="xs:string" minOccurs="1" maxOccurs="1"/>
+  <xs:element name="booleanValue" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+
+  <!-- basicType (list) -->
+  <xs:element name="intValues" type="xs:int" minOccurs="0" maxOccurs="unbounded"/>
+  <xs:element name="longValues" type="xs:long" minOccurs="1" maxOccurs="2"/>
+  <xs:element name="doubleValues" type="xs:double" minOccurs="2" maxOccurs="unbounded"/>
+  <xs:element name="stringValues" type="xs:string" minOccurs="3"/>
+  <xs:element name="booleanValues" type="xs:boolean" minOccurs="3"/>
+</xs:schema>

@@ -1,12 +1,15 @@
-SUBDIRS = depends/json_spirit testjsondata2cpp
+SUBDIRS = depends/json_spirit testjsondata2cpp testjsonxsd2cpp
 
-.PHONY: depends/json_spirit testjsondata2cpp
-build: testjsondata2cpp
+.PHONY: $(SUBDIRS)
+build: testjsondata2cpp testjsonxsd2cpp
 
 depends/json_spirit:
 	make --directory=$(@)
 
 testjsondata2cpp: depends/json_spirit
+	make --directory=$(@)
+
+testjsonxsd2cpp: depends/json_spirit
 	make --directory=$(@)
 
 clean:

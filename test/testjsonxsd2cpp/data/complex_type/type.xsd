@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- basicType (single) -->
+  <xs:element name="intValue" type="xs:int" minOccurs="0" maxOccurs="1"/>
+  <xs:element name="longValue" type="xs:long" maxOccurs="1"/>
+  <xs:element name="doubleValue" type="xs:double"/>
+  <xs:element name="stringValue" type="xs:string" minOccurs="1" maxOccurs="1"/>
+  <xs:element name="booleanValue" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+
+  <!-- basicType (list) -->
+  <xs:element name="intValues" type="xs:int" minOccurs="0" maxOccurs="unbounded"/>
+  <xs:element name="longValues" type="xs:long" minOccurs="1" maxOccurs="2"/>
+  <xs:element name="doubleValues" type="xs:double" minOccurs="2" maxOccurs="unbounded"/>
+  <xs:element name="stringValues" type="xs:string" minOccurs="3"/>
+  <xs:element name="booleanValues" type="xs:boolean" minOccurs="3"/>
+
+  <!-- simpleType (single) -->
+  <xs:element name="longRange" type="longRange" minOccurs="0" maxOccurs="1"/>
+  <xs:element name="intRange" type="intRange" maxOccurs="1"/>
+  <xs:element name="stringRange" type="stringRange" minOccurs="0"/>
+
+  <!-- simpleType (list) -->
+  <xs:element name="longRanges" type="longRange" minOccurs="0" maxOccurs="unbounded"/>
+  <xs:element name="intRanges" type="intRange" minOccurs="1" maxOccurs="2"/>
+  <xs:element name="stringRanges" type="stringRange" maxOccurs="unbounded"/>
+
+  <!-- complexType (single) -->
+  <xs:element name="complexSequenceSimpleType" type="complexSequenceSimpleType"/>
+  <xs:element name="complexSequenceComplexType" type="complexSequenceComplexType"/>
+  <xs:element name="complexSequenceRef" type="complexSequenceRef"/>
+  <xs:element name="complexComplexContentRestriction" type="complexComplexContentRestriction"/>
+  <xs:element name="complexComplexContentExtension" type="complexComplexContentExtension"/>
+  <!-- xs:element name="complexSimpleContentRestriction" type="complexSimpleContentRestriction"/-->
+  <!-- xs:element name="complexSimpleContentExtension" type="complexSimpleContentExtension"/-->
+
+  <!-- complexType (list) -->
+  <xs:element name="complexSequenceSimpleTypes" type="complexSequenceSimpleType" maxOccurs="unbounded"/>
+
+  <xs:simpleType name="longRange">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="100"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="intRange">
+    <xs:restriction base="xs:int">
+      <xs:enumeration value="8"/>
+      <xs:enumeration value="9"/>
+      <xs:enumeration value="10"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="stringRange">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Monday"/>
+      <xs:enumeration value="Tuesday"/>
+      <xs:enumeration value="Wednesday"/>
+      <xs:enumeration value="Thursday"/>
+      <xs:enumeration value="Friday"/>
+      <xs:enumeration value="Saturday"/>
+      <xs:enumeration value="Sunday"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="complexSequenceSimpleType">
+    <xs:sequence>
+      <xs:element name="intValue" type="xs:int" minOccurs="0"/>
+      <xs:element name="intValues" type="xs:int" maxOccurs="unbounded"/>
+      <xs:element name="stringRange" type="stringRange"/>
+      <xs:element name="stringRanges" type="stringRange" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="complexSequenceComplexType">
+    <xs:sequence>
+      <xs:element name="topIntValue" type="xs:int" minOccurs="0"/>
+      <xs:element name="topIntValues" type="xs:int" maxOccurs="unbounded"/>
+      <xs:element name="complexValue" type="complexSequenceSimpleType"/>
+      <xs:element name="complexValues" type="complexSequenceSimpleType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="complexSequenceRef">
+    <xs:sequence>
+      <xs:element name="intValue" type="xs:int" minOccurs="0"/>
+      <xs:element ref="intValue"/>
+      <xs:element ref="intValues"/>
+      <xs:element ref="longValue" maxOccurs="unbounded"/>
+      <xs:element ref="longValues" maxOccurs="unbounded"/>
+      <xs:element ref="complexSequenceSimpleType" maxOccurs="unbounded"/>
+      <xs:element ref="complexSequenceComplexType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="complexComplexContentRestriction">
+    <xs:complexContent>
+      <xs:restriction base="complexSequenceSimpleType">
+        <!-- ignore child nodes -->
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="complexComplexContentExtension">
+    <xs:complexContent>
+      <xs:extension base="complexSequenceSimpleType">
+        <xs:sequence>
+          <xs:element name="extIntValue" type="xs:int" minOccurs="0"/>
+          <xs:element name="extComplexValue" type="complexSequenceSimpleType" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+</xs:schema>

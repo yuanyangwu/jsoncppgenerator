@@ -1,0 +1,46 @@
+
+# to be replaced with json file path
+JSON_FILE := ../TO_REPLACE_JSON_FILE
+JSON_SUB_DIR := $(patsubst %.json, %, $(JSON_FILE))
+JSON_SUB_FILES := $(wildcard $(JSON_SUB_DIR)/*.json)
+
+OUTPUT_APP := output/bin/test
+
+CLIENT_SRC_FILES := $(wildcard $(CURDIR)/src/*.cpp $(CURDIR)/src/*/*.cpp)
+CLIENT_OBJ_FILES := $(patsubst $(CURDIR)/src/%.cpp, $(CURDIR)/output/obj/%.o, $(CLIENT_SRC_FILES))
+
+JSONSPIRIT_DIR=$(CURDIR)/../../../../depends/json_spirit/output/dist
+
+CFLAGS := \
+	-I$(CURDIR)/src \
+	-I$(JSONSPIRIT_DIR)/include \
+	-g -O \
+
+STRICT_CFLAGS := $(CFLAGS) -Wall
+
+LDFLAGS := -g -O -Wall \
+
+
+default: init $(OUTPUT_APP)
+
+init:
+	@mkdir -p output/bin
+	@mkdir -p output/obj/detail
+
+clean:
+	rm -fr output
+
+run: $(OUTPUT_APP)
+	for f in $(JSON_FILE) $(JSON_SUB_FILES); do \
+		$(OUTPUT_APP) $${f} > output/bin/out.json && \
+		../../../../../diff_json.py $${f} output/bin/out.json && \
+		continue; \
+		echo "Fail on $${f}"; exit 1; \
+	done;
+
+$(OUTPUT_APP): $(CLIENT_OBJ_FILES)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(JSONSPIRIT_DIR)/lib/libjson_spirit.a
+
+$(CURDIR)/output/obj/%.o: $(CURDIR)/src/%.cpp
+	$(CXX) $(STRICT_CFLAGS) -c $< -o $@
+

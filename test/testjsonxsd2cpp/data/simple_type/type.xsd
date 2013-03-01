@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- simpleType (single) -->
+  <xs:element name="longRange" type="longRange" minOccurs="0" maxOccurs="1"/>
+  <xs:element name="intRange" type="intRange" maxOccurs="1"/>
+  <xs:element name="stringRange" type="stringRange" minOccurs="0"/>
+
+  <!-- simpleType (list) -->
+  <xs:element name="longRanges" type="longRange" minOccurs="0" maxOccurs="unbounded"/>
+  <xs:element name="intRanges" type="intRange" minOccurs="1" maxOccurs="2"/>
+  <xs:element name="stringRanges" type="stringRange" maxOccurs="unbounded"/>
+
+  <xs:simpleType name="longRange">
+    <xs:restriction base="xs:long">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="100"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="intRange">
+    <xs:restriction base="xs:int">
+      <xs:enumeration value="8"/>
+      <xs:enumeration value="9"/>
+      <xs:enumeration value="10"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="stringRange">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Monday"/>
+      <xs:enumeration value="Tuesday"/>
+      <xs:enumeration value="Wednesday"/>
+      <xs:enumeration value="Thursday"/>
+      <xs:enumeration value="Friday"/>
+      <xs:enumeration value="Saturday"/>
+      <xs:enumeration value="Sunday"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>
