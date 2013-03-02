@@ -1,7 +1,6 @@
 language: cpp
 compiler:
   - gcc
-# - clang
 python:
   - "2.6"
 script: make --directory=test
