@@ -1080,7 +1080,7 @@ int main(int argc, char ** argv)
   std::${w}ifstream is(argv[1]);
   ${namespace}::${classname} val;
   val.DecodeJSON(is);
-  val.EncodeJSON(std::${w}cout);
+  val.EncodeJSON(std::${w}cout, true);
   return 0;
 }
 """
