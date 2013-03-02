@@ -104,10 +104,7 @@ class JSONXSDFile:
 	def get_element_definition(self, element_name):
 		assert self.elements.has_key(element_name), ("element must be defined")
 		element = self.elements[element_name]
-		if self.is_basic_type(element["type_name"]):
-			return element
-		else:
-			assert False, ("TODO simpleType complexType")
+		return element
 
 	def is_basic_type(self, typename):
 		return self.get_basic_type(typename) != None

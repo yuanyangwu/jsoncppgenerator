@@ -1,0 +1,53 @@
+{
+  "intValue": 4,
+  "intValues": [5, 6],
+  "longValue": 7,
+
+  "complexSequenceSimpleType": {
+    "intValue": 40,
+    "intValues": [50, 60],
+    "stringRange": "aaa",
+    "stringRanges": ["bbb", "ccc"]
+    },
+
+  "complexSequenceComplexType": {
+    "topIntValue": 1000,
+    "topIntValues": [2000, 3000],
+    "complexValue": {
+        "intValue": 1,
+        "intValues": [2, 3],
+        "stringRange": "a",
+        "stringRanges": ["b", "c"]
+      },
+    "complexValues": [
+        {
+          "intValue": 10,
+          "intValues": [20, 30],
+          "stringRange": "aa",
+          "stringRanges": ["bb", "cc"]
+        },
+        {
+          "intValue": 100,
+          "intValues": [200, 300],
+          "stringRange": "aaa",
+          "stringRanges": ["bbb", "ccc"]
+        }
+      ]
+    },
+
+  "complexSequenceSimpleTypes": [
+      {
+        "intValue": 7,
+        "intValues": [8, 9],
+        "stringRange": "a",
+        "stringRanges": ["b", "c"]
+      },
+      {
+        "intValue": 70,
+        "intValues": [80, 90],
+        "stringRange": "aa",
+        "stringRanges": ["bb", "cc"]
+      }
+    ]
+}
+

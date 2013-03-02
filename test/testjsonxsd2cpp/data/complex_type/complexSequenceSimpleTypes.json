@@ -1,0 +1,14 @@
+[
+  {
+    "intValue": 7,
+    "intValues": [8, 9],
+    "stringRange": "a",
+    "stringRanges": ["b", "c"]
+  },
+  {
+    "intValue": 70,
+    "intValues": [80, 90],
+    "stringRange": "aa",
+    "stringRanges": ["bb", "cc"]
+  }
+]

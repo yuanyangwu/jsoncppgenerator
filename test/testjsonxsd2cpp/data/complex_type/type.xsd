@@ -83,13 +83,12 @@
 
   <xs:complexType name="complexSequenceRef">
     <xs:sequence>
-      <xs:element name="intValue" type="xs:int" minOccurs="0"/>
-      <xs:element ref="intValue"/>
+      <xs:element name="intValue" type="xs:int"/>
       <xs:element ref="intValues"/>
-      <xs:element ref="longValue" maxOccurs="unbounded"/>
-      <xs:element ref="longValues" maxOccurs="unbounded"/>
-      <xs:element ref="complexSequenceSimpleType" maxOccurs="unbounded"/>
+      <xs:element ref="longValue"/>
+      <xs:element ref="complexSequenceSimpleType"/>
       <xs:element ref="complexSequenceComplexType"/>
+      <xs:element ref="complexSequenceSimpleTypes"/>
     </xs:sequence>
   </xs:complexType>
 
