@@ -1,6 +1,6 @@
 #  The MIT License (MIT)
 #
-#  Copyright (c) 2012 Yuanyang Wu
+#  Copyright (c) 2013 Yuanyang Wu
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -203,7 +203,7 @@ class CppHeaderHandler(JSONBaseHandler):
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2012 Yuanyang Wu
+ * Copyright (c) 2013 Yuanyang Wu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -447,7 +447,7 @@ class CppBodyConstant:
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2012 Yuanyang Wu
+ * Copyright (c) 2013 Yuanyang Wu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1049,7 +1049,7 @@ class CppTest:
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2012 Yuanyang Wu
+ * Copyright (c) 2013 Yuanyang Wu
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
