@@ -166,6 +166,10 @@ class JSONXSDFile:
 					cur_class, cur_deps = self.get_type_deps_simple(n["type_name"], n["is_multiple"])
 				deps = deps.union(cur_deps)
 
+		if def_node.has_key("base_type_name"):
+			cur_class, cur_deps = self.get_type_deps_simple(def_node["base_type_name"], False)
+			deps = deps.union(cur_deps)
+
 		return deps
 
 	def parse_file(self):
@@ -223,7 +227,7 @@ class JSONXSDFile:
 		assert restriction_node != None, ("simpleType \"" + def_node.get("name", "(None)") + "\" must has \"restriction\" child node")
 
 		base_type_name = XmlUtil.get_node_attribute_value(restriction_node, "base")
-		assert base_type_name != None, ("simpleType \"" + def_node.get("name", "(None)") + "\" must has attribute \"base\" in \"restriction\" node")
+		assert base_type_name != None, ("simpleType \"" + def_node.get("name", "(None)") + "\" must have attribute \"base\" in \"restriction\" node")
 		def_node["base_type_name"] = base_type_name.split(":")[-1]
 
 	def parse_complextype_node(self, xml_node):
@@ -244,6 +248,31 @@ class JSONXSDFile:
 				if n.nodeType == n.ELEMENT_NODE:
 					sequence_elements.append(self.parse_element_node(n, False))
 			def_node["sequence_elements"] = sequence_elements
+			return None
+
+		node = XmlUtil.get_child_element_node(xml_node, "complexContent")
+		if node != None:
+			extension_xml_node = XmlUtil.get_child_element_node(node, "extension");
+			if extension_xml_node != None:
+				base_type_name = XmlUtil.get_node_attribute_value(extension_xml_node, "base")
+				assert base_type_name != None, ("complexType \"" + def_node["name"] + """\"'s "complexContent > extension" must have attribute "base" """)
+				def_node["base_type_name"] = base_type_name.split(":")[-1]
+
+				sequence_xml_node = XmlUtil.get_child_element_node(extension_xml_node, "sequence")
+				if sequence_xml_node != None:
+					sequence_elements = []
+					for n in sequence_xml_node.childNodes:
+						if n.nodeType == n.ELEMENT_NODE:
+							sequence_elements.append(self.parse_element_node(n, False))
+					def_node["sequence_elements"] = sequence_elements
+				return None
+
+			#TODO restriction
+
+			assert False, ("complexType \"" + def_node["name"] + """\"'s child element "complexContent" must have "extension/restriction" child element""")
+			return None
+
+		assert False, ("complexType \"" + def_node["name"] + "\" must have \"sequence/complexContent\" child element")
 
 class JSONXSDWalker:
 	def __init__(self, json_xsd_file):
@@ -259,16 +288,19 @@ class JSONXSDWalker:
 		else:
 			# single complex type
 			def_node = self.schema.complextypes[typename]
-			if def_node.has_key("sequence_elements"):
-				self.walk_single_complex_sequence(typename)
+			self.walk_single_complex_sequence(typename)
 
 	def walk_single_complex_sequence(self, complex_type_name):
 		parent_names = []
 		name = JSONXSDConstant.get_cpp_class_name(complex_type_name, False)
-		for handler in self.json_handlers:
-			handler.handle_object_start(parent_names, name)
-
 		def_node = self.schema.complextypes[complex_type_name]
+		base_name = None
+		if def_node.has_key("base_type_name"):
+			base_name = JSONXSDConstant.get_cpp_class_name(def_node["base_type_name"], False)
+
+		for handler in self.json_handlers:
+			handler.handle_object_start(parent_names, name, None, base_name)
+
 		for n in def_node["sequence_elements"]:
 			if n.has_key("ref_name"):
 				cur_class, cur_deps = self.schema.get_element_class_and_deps(n["ref_name"])
@@ -433,7 +465,7 @@ if __name__ == "__main__":
 		cppbodybuilder = CppBodyBuilder(options.namespace, options.stringtype)
 		walker.json_handlers.extend(cppbodybuilder.handlers)
 
-		# print "walking " + typename + ", " + str(is_multiple)
+		#print "walking " + typename + ", " + str(is_multiple)
 		walker.walk(typename, is_multiple)
 		cppheader.save_to_dir(options.dstdir)
 		cppbodybuilder.save_to_dir(options.dstdir)

@@ -105,7 +105,6 @@
       <xs:extension base="complexSequenceSimpleType">
         <xs:sequence>
           <xs:element name="extIntValue" type="xs:int" minOccurs="0"/>
-          <xs:element name="extComplexValue" type="complexSequenceSimpleType" minOccurs="0"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>

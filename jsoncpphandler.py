@@ -32,7 +32,7 @@ class JSONBaseHandler:
 	def is_parent_array(self, name):
 		return name == None
 
-	def handle_object_start(self, parent_names, name, object_type_name = None):
+	def handle_object_start(self, parent_names, name, object_type_name = None, base_type_name = None):
 		if JSONBaseHandler.print_trace:
 			print "--" * len(parent_names) + "handle_object_start " + str(name)
 
@@ -245,7 +245,7 @@ class CppHeaderHandler(JSONBaseHandler):
 
 	class_begin_template = string.Template(
 """
-${indent}class ${classname}
+${indent}class ${classname} ${inherit_base_class}
 ${indent}{
 ${indent}public:
 ${indent}  void DecodeJSON(std::${w}istream & is);
@@ -304,10 +304,15 @@ ${indent}  ArrayType m_array;
 		f.write(self.content())
 		f.close()
 
-	def handle_object_start(self, parent_names, name, object_type_name = None):
+	def handle_object_start(self, parent_names, name, object_type_name = None, base_type_name = None):
 		gen_class = (object_type_name == None) or ( len(parent_names) == 0 )
 		if object_type_name != None:
 			self.dep_types.add(object_type_name)
+
+		inherit_base_class = ""
+		if base_type_name != None:
+			self.dep_types.add(base_type_name)
+			inherit_base_class = ": public " + CppFormat.classname(base_type_name)
 
 		classname = CppFormat.classname(name, parent_names)
 
@@ -324,6 +329,7 @@ ${indent}  ArrayType m_array;
 		self.class_decl += CppHeaderHandler.class_begin_template.substitute({
 				"indent": CppFormat.indent(len(parent_names)),
 				"classname" : classname,
+				"inherit_base_class": inherit_base_class,
 				"w": CppFormat.stringtype_w(self.stringtype),
 				"method_decodejson_signature": CppFormat.method_decodejson_object_signature([], self.stringtype),
 				"method_encodejson_signature": CppFormat.method_encodejson_object_or_array_signature([], self.stringtype)
@@ -373,6 +379,7 @@ ${indent}  ArrayType m_array;
 		self.class_decl += CppHeaderHandler.class_begin_template.substitute({
 				"indent": CppFormat.indent(len(parent_names)),
 				"classname" : CppFormat.classname(name),
+				"inherit_base_class": "",
 				"w": CppFormat.stringtype_w(self.stringtype),
 				"method_decodejson_signature": CppFormat.method_decodejson_array_signature([], self.stringtype),
 				"method_encodejson_signature": CppFormat.method_encodejson_object_or_array_signature([], self.stringtype)
@@ -493,7 +500,8 @@ class CppBodyConstant:
 	method_decodejson_object_begin_template = string.Template(
 """${method_signature}
 {
-  const json_spirit::${w}Object obj(val.get_obj());
+  ${call_base_method}
+  const json_spirit::${w}Object & obj(val.get_obj());
   BOOST_FOREACH(json_spirit::${w}Pair pair, obj)
   {
     if (pair.value_.is_null()) continue;
@@ -645,11 +653,17 @@ class CppBodyConstant:
 	method_encodejson_object_begin_template = string.Template(
 """${method_signature}
 {
-  json_spirit::${w}Object obj;
+  ${call_base_method}
+  if (json_spirit::null_type == val.type())
+  {
+    val = json_spirit::${w}Object();
+  }
+  json_spirit::${w}Object & obj(val.get_obj());
+
 """
 	)
 
-	method_encodejson_object_end = """  val = obj;
+	method_encodejson_object_end = """
 }
 """
 
@@ -707,7 +721,7 @@ class CppBodyFileHandler(JSONBaseHandler):
 		self.file_begin = ""
 		self.file_end = CppBodyConstant.file_end
 
-	def handle_object_start(self, parent_names, name, object_type_name = None):
+	def handle_object_start(self, parent_names, name, object_type_name = None, base_type_name = None):
 		if len(parent_names) == 0:
 			self.filename = CppFormat.bodyfilename(name)
 			self.file_begin = CppBodyConstant.file_begin_template.substitute({
@@ -730,7 +744,7 @@ class CppMethodBaseHandler(JSONBaseHandler):
 	def content(self):
 		return "\n".join([self.methods.get(method) for method in sorted(self.methods.keys())])
 
-	def handle_object_start(self, parent_names, name, object_type_name = None):
+	def handle_object_start(self, parent_names, name, object_type_name = None, base_type_name = None):
 		if len(parent_names) == 0:
 			self.filename = CppFormat.bodyfilename(name)
 
@@ -742,7 +756,7 @@ class CppMethodDecodeHandler(CppMethodBaseHandler):
 	def __init__(self, stringtype):
 		CppMethodBaseHandler.__init__(self, stringtype)
 
-	def handle_object_start(self, parent_names, name, object_type_name = None):
+	def handle_object_start(self, parent_names, name, object_type_name = None, base_type_name = None):
 		CppMethodBaseHandler.handle_object_start(self, parent_names, name, object_type_name)
 		gen_class = (object_type_name == None) or ( len(parent_names) == 0 )
 
@@ -781,8 +795,13 @@ class CppMethodDecodeHandler(CppMethodBaseHandler):
 				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
+		call_base_method = ""
+		if base_type_name != None:
+			call_base_method = CppFormat.classname(base_type_name) + "::DecodeJSON(val);"
+
 		method_decodejson_object = CppFormat.method_decodejson_object_signature(names, self.stringtype)
 		self.methods[method_decodejson_object] = CppBodyConstant.method_decodejson_object_begin_template.substitute({
+				"call_base_method": call_base_method,
 				"method_signature": method_decodejson_object,
 				"w": CppFormat.stringtype_w(self.stringtype)
 			})
@@ -896,7 +915,7 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 	def __init__(self, stringtype):
 		CppMethodBaseHandler.__init__(self, stringtype)
 
-	def handle_object_start(self, parent_names, name, object_type_name = None):
+	def handle_object_start(self, parent_names, name, object_type_name = None, base_type_name = None):
 		CppMethodBaseHandler.handle_object_start(self, parent_names, name, object_type_name)
 		gen_class = (object_type_name == None) or ( len(parent_names) == 0 )
 
@@ -927,10 +946,15 @@ class CppMethodEncodeHandler(CppMethodBaseHandler):
 				"w": CppFormat.stringtype_w(self.stringtype)
 			})
 
+		call_base_method = ""
+		if base_type_name != None:
+			call_base_method = CppFormat.classname(base_type_name) + "::EncodeJSON(val);"
+
 		method_encodejson_object = CppFormat.method_encodejson_object_or_array_signature(names, self.stringtype)
 		self.methods[method_encodejson_object] = CppBodyConstant.method_encodejson_object_begin_template.substitute({
 				"method_signature": method_encodejson_object,
-				"w": CppFormat.stringtype_w(self.stringtype)
+				"w": CppFormat.stringtype_w(self.stringtype),
+				"call_base_method": call_base_method
 			})
 
 	def handle_object_end(self, parent_names, name, object_type_name = None):
