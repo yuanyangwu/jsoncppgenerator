@@ -267,7 +267,12 @@ class JSONXSDFile:
 					def_node["sequence_elements"] = sequence_elements
 				return None
 
-			#TODO restriction
+			restriction_xml_node = XmlUtil.get_child_element_node(node, "restriction");
+			if restriction_xml_node != None:
+				base_type_name = XmlUtil.get_node_attribute_value(restriction_xml_node, "base")
+				assert base_type_name != None, ("complexType \"" + def_node["name"] + """\"'s "complexContent > restriction" must have attribute "base" """)
+				def_node["base_type_name"] = base_type_name.split(":")[-1]
+				return None
 
 			assert False, ("complexType \"" + def_node["name"] + """\"'s child element "complexContent" must have "extension/restriction" child element""")
 			return None
@@ -294,14 +299,19 @@ class JSONXSDWalker:
 		parent_names = []
 		name = JSONXSDConstant.get_cpp_class_name(complex_type_name, False)
 		def_node = self.schema.complextypes[complex_type_name]
+
 		base_name = None
 		if def_node.has_key("base_type_name"):
 			base_name = JSONXSDConstant.get_cpp_class_name(def_node["base_type_name"], False)
 
+		sequence_elements = []
+		if def_node.has_key("sequence_elements"):
+			sequence_elements = def_node["sequence_elements"]
+
 		for handler in self.json_handlers:
 			handler.handle_object_start(parent_names, name, None, base_name)
 
-		for n in def_node["sequence_elements"]:
+		for n in sequence_elements:
 			if n.has_key("ref_name"):
 				cur_class, cur_deps = self.schema.get_element_class_and_deps(n["ref_name"])
 				ref_def_node = self.schema.get_element_definition(n["ref_name"])

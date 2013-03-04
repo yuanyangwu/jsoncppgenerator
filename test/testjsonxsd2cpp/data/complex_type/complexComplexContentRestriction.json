@@ -1,0 +1,6 @@
+{
+  "intValue": 1,
+  "intValues": [2, 3],
+  "stringRange": "aaa",
+  "stringRanges": ["bbb", "ccc"]
+}
