@@ -476,7 +476,6 @@ class CppBodyConstant:
  */
 
 
-#include <boost/foreach.hpp>
 #include "${headerfilename}"
 
 """
@@ -502,8 +501,10 @@ class CppBodyConstant:
 {
   ${call_base_method}
   const json_spirit::${w}Object & obj(val.get_obj());
-  BOOST_FOREACH(const json_spirit::${w}Pair & pair, obj)
+  for (json_spirit::${w}Object::const_iterator it = obj.begin();
+       obj.end() != it; ++it)
   {
+    const json_spirit::${w}Pair & pair(*it);
     if (pair.value_.is_null()) continue;
 
 """
@@ -597,8 +598,10 @@ class CppBodyConstant:
 """${method_signature}
 {
   const json_spirit::${w}Array & array(val.get_array());
-  BOOST_FOREACH(const json_spirit::${w}Value & value, array)
+  for (json_spirit::${w}Array::const_iterator it = array.begin();
+       array.end() != it; ++it)
   {
+    const json_spirit::${w}Value & value(*it);
     ArrayElementType element;
     if (!value.is_null())
     {
@@ -684,14 +687,16 @@ class CppBodyConstant:
 	method_encodejson_array_begin_template = string.Template(
 """${method_signature}
 {
-  json_spirit::${w}Array array;
-  BOOST_FOREACH(const ArrayElementType & value, m_array)
+  val = json_spirit::Array();
+  json_spirit::${w}Array & array(val.get_array());
+  for (ArrayType::const_iterator it = m_array.begin();
+       m_array.end() != it; ++it)
   {
+    const ArrayElementType & value(*it);
 """
 	)
 
 	method_encodejson_array_end = """  }
-  val = array;
 }
 """
 
