@@ -687,7 +687,7 @@ class CppBodyConstant:
 	method_encodejson_array_begin_template = string.Template(
 """${method_signature}
 {
-  val = json_spirit::Array();
+  val = json_spirit::${w}Array();
   json_spirit::${w}Array & array(val.get_array());
   for (ArrayType::const_iterator it = m_array.begin();
        m_array.end() != it; ++it)
