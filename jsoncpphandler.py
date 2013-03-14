@@ -225,8 +225,8 @@ class CppHeaderHandler(JSONBaseHandler):
  */
 
 
-#ifndef _${classname}_H_
-#define _${classname}_H_
+#ifndef _${namespace_}_${classname}_H_
+#define _${namespace_}_${classname}_H_
 
 #include <istream>
 #include <ostream>
@@ -320,6 +320,7 @@ ${indent}  ArrayType m_array;
 			self.filename = CppFormat.headerfilename(name)
 			self.classname = CppFormat.classname(name)
 			self.file_begin = CppHeaderHandler.file_begin_template.substitute({
+					"namespace_": self.namespace.replace("::", "_"),
 					"classname": classname
 				})
 
@@ -370,6 +371,7 @@ ${indent}  ArrayType m_array;
 			self.filename = CppFormat.headerfilename(name)
 			self.classname = CppFormat.classname(name)
 			self.file_begin = CppHeaderHandler.file_begin_template.substitute({
+					"namespace_": self.namespace.replace("::", "_"),
 					"classname": string.upper(CppFormat.classname(name))
 				})
 
